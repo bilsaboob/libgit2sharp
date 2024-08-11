@@ -1790,6 +1790,18 @@ namespace LibGit2Sharp.Core
         internal static extern void git_strarray_free(
             ref GitStrArray array);
 
+        [DllImport(libgit2)]
+        internal static extern unsafe int git_submodule_add_setup(
+            out git_submodule* reference,
+            git_repository* repo,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalCookie = UniqueId.UniqueIdentifier, MarshalTypeRef = typeof(StrictUtf8Marshaler))] string url,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalCookie = UniqueId.UniqueIdentifier, MarshalTypeRef = typeof(StrictFilePathMarshaler))] FilePath path,
+            bool use_gitlink);
+
+        [DllImport(libgit2)]
+        internal static extern unsafe int git_submodule_add_finalize(
+            git_submodule* reference);
+
         [DllImport(libgit2, CallingConvention = CallingConvention.Cdecl)]
         internal static extern unsafe int git_submodule_lookup(
             out git_submodule* reference,

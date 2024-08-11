@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using LibGit2Sharp.Core;
 using LibGit2Sharp.Core.Handles;
@@ -45,6 +46,38 @@ namespace LibGit2Sharp
                                                             Proxy.git_submodule_path(handle),
                                                             Proxy.git_submodule_url(handle)));
             }
+        }
+
+        /// <summary>
+        /// Adds a new repository, checkout the selected branch and add it to superproject index
+        /// </summary>
+        /// <param name="name">The name of the Submodule</param>
+        /// <param name="url">The url of the remote repository</param>
+        /// <param name="relativePath">The path of the submodule inside of the super repository, if none, name is taken.</param>
+        /// <param name="useGitLink">Should workdir contain a gitlink to the repo in .git/modules vs. repo directly in workdir.</param>
+        /// <param name="initSubRepository">Should workdir contain a gitlink to the repo in .git/modules vs. repo directly in workdir.</param>
+        /// <returns></returns>
+        public Submodule Add(string name, string url, string relativePath, bool useGitLink , Action<Repository> initSubRepository)
+        {
+            Ensure.ArgumentNotNullOrEmptyString(name, "name");
+
+            Ensure.ArgumentNotNullOrEmptyString(url, "url");
+
+            relativePath ??= name;
+
+            using (var handle = Proxy.git_submodule_add_setup(repo.Handle, url, relativePath, useGitLink))
+            {
+                var subPath = Path.Combine(repo.Info.WorkingDirectory, relativePath);
+
+                using (var subRep = new Repository(subPath))
+                {
+                    initSubRepository(subRep);
+                }
+
+                Proxy.git_submodule_add_finalize(handle);
+            }
+
+            return this[name];
         }
 
         /// <summary>
